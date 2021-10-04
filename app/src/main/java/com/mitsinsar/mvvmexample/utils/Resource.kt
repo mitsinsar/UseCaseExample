@@ -3,14 +3,14 @@ package com.mitsinsar.mvvmexample.utils
 sealed class Resource<out T> {
 
     data class Success<T>(val data: T?) : Resource<T>()
-    data class Error(val exception: Throwable) : Resource<Nothing>()
-    object Loading : Resource<Nothing>()
+    data class Error<T>(val exception: Throwable, val data: T? = null) : Resource<T>()
+    data class Loading<T>(val data: T? = null) : Resource<T>()
     object OnLoadingFinished : Resource<Nothing>()
 
     fun use(
         onSuccess: ((T) -> Unit)? = null,
-        onFailed: ((Error) -> Unit)? = null,
-        onLoading: (() -> Unit)? = null,
+        onFailed: ((Throwable, T?) -> Unit)? = null,
+        onLoading: ((T?) -> Unit)? = null,
         onLoadingFinished: (() -> Unit)? = null
     ) {
         when (this) {
@@ -22,10 +22,10 @@ sealed class Resource<out T> {
             }
             is Error -> {
                 onLoadingFinished?.invoke()
-                onFailed?.invoke(this)
+                onFailed?.invoke(exception, data)
             }
             is Loading -> {
-                onLoading?.invoke()
+                onLoading?.invoke(data)
             }
             is OnLoadingFinished -> {
                 onLoadingFinished?.invoke()
